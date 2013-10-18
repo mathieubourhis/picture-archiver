@@ -2,9 +2,11 @@ package me.hopto.patriarch.picturearchiver.app.steps;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -47,7 +49,7 @@ public class FolderParser {
 					else if (type.equals("video")) files.add(new FileWrapper(FileType.VIDEO, file, index++, format));
 					else files.add(new FileWrapper(FileType.OTHER, file));
 				} else {
-					if (logger.isDebugEnabled()) logger.debug("We don't treat nested folders for now");
+					files.add(new FileWrapper(FileType.DIRECTORY, file));
 				}
 			}
 		}
@@ -59,34 +61,57 @@ public class FolderParser {
 		for (FileWrapper fileWrapper : files) {
 			String separator = FileSystems.getDefault().getSeparator();
 			String destPath = destDir.getPath() + (destDir.getPath().endsWith(separator) ? "" : separator);
-			if (logger.isDebugEnabled()) logger.debug(destPath + fileWrapper.getNewName());
-			if (fileWrapper.getFileType() == FileType.PICTURE) {
-				Iterator<?> iter = ImageIO.getImageWritersByFormatName(fileWrapper.getExt());
-				ImageWriter writer = (ImageWriter) iter.next();
-				ImageWriteParam iwp = writer.getDefaultWriteParam();
-				iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-				iwp.setCompressionQuality(0.30f);   // an integer between 0 and 1
-				// 1 specifies minimum compression and maximum quality
-				File file = new File(destPath + fileWrapper.getNewName());
-				FileImageOutputStream output = new FileImageOutputStream(file);
-				writer.setOutput(output);
-				BufferedImage img = ImageIO.read(fileWrapper.getFile());
-				IIOImage image = new IIOImage(img, null, null);
-				writer.write(null, image, iwp);
-				writer.dispose();
+			switch (fileWrapper.getFileType()) {
+			case DIRECTORY:
+				processNestedDir(fileWrapper, separator, destPath);
+				break;
+			case OTHER:
+				copyFileToMiscDir(fileWrapper, destPath);
+				break;
+			case PICTURE:
+				compressAndRenamePicture(fileWrapper, destPath);
+				break;
+			case VIDEO:
+				copyFile(fileWrapper, destPath);
+				break;
+			default:
+				break;
 			}
 		}
 	}
 
-	public void copyTo2(File destDir) throws IOException {
-		if (!destDir.isDirectory()) throw new RuntimeException("not a dir");
-		for (FileWrapper fileWrapper : files) {
-			String separator = FileSystems.getDefault().getSeparator();
-			String destPath = destDir.getPath() + (destDir.getPath().endsWith(separator) ? "" : separator);
-			if (logger.isDebugEnabled()) logger.debug(destPath + fileWrapper.getNewName());
-			if (fileWrapper.getFileType() == FileType.PICTURE) {
+	private void processNestedDir(FileWrapper fileWrapper, String separator, String destPath) throws IOException {
+		FolderParser folderParser = new FolderParser(fileWrapper.getFile().getPath());
+		folderParser.parseDir();
+		String nestedDestPath = destPath + fileWrapper.getNewName() + separator;
+		File nestedDestDir = new File(nestedDestPath);
+		if (!nestedDestDir.exists()) nestedDestDir.mkdirs();
+		folderParser.copyTo(nestedDestDir);
+	}
 
-			}
-		}
+	private void copyFile(FileWrapper fileWrapper, String destPath) throws IOException {
+		Files.copy(fileWrapper.getFile().toPath(), Paths.get(destPath, fileWrapper.getNewName()));
+	}
+
+	private void copyFileToMiscDir(FileWrapper fileWrapper, String destPath) throws IOException {
+		File file = Paths.get(destPath, "__misc").toFile();
+		if (!file.exists()) file.mkdirs();
+		Files.copy(fileWrapper.getFile().toPath(), Paths.get(destPath, "__misc", fileWrapper.getNewName()));
+	}
+
+	private void compressAndRenamePicture(FileWrapper fileWrapper, String destPath) throws FileNotFoundException, IOException {
+		Iterator<?> iter = ImageIO.getImageWritersByFormatName(fileWrapper.getExt());
+		ImageWriter writer = (ImageWriter) iter.next();
+		ImageWriteParam iwp = writer.getDefaultWriteParam();
+		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+
+		iwp.setCompressionQuality(fileWrapper.getQuality());
+		File outputFile = new File(destPath + fileWrapper.getNewName());
+		FileImageOutputStream output = new FileImageOutputStream(outputFile);
+		writer.setOutput(output);
+		BufferedImage img = ImageIO.read(fileWrapper.getFile());
+		IIOImage image = new IIOImage(img, null, null);
+		writer.write(null, image, iwp);
+		writer.dispose();
 	}
 }

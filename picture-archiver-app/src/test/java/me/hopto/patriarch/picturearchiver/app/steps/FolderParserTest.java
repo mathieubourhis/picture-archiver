@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.apache.log4j.Logger;
+import org.assertj.core.util.Files;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,7 +27,8 @@ public class FolderParserTest {
 		if (logger.isDebugEnabled()) logger.debug("[BEGIN] " + name.getMethodName());
 		folderParser = new FolderParser("src/test/resources/sample/aPictureFolder/");
 		destDir = new File("target/aPictureFolder/");
-		if (!destDir.exists()) destDir.mkdirs();
+		if (destDir.exists()) Files.delete(destDir);
+		destDir.mkdirs();
 	}
 
 	@After
@@ -42,14 +44,15 @@ public class FolderParserTest {
 		List<FileWrapper> files = folderParser.parseDir();
 
 		// Assert
-		assertThat(files).isNotNull().hasSize(7);
-		assertThat(files.get(0).getFileType()).isEqualTo(FileType.OTHER);
-		assertThat(files.get(1).getFileType()).isEqualTo(FileType.VIDEO);
-		assertThat(files.get(2).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(files).isNotNull().hasSize(8);
+		assertThat(files.get(0).getFileType()).isEqualTo(FileType.DIRECTORY);
+		assertThat(files.get(1).getFileType()).isEqualTo(FileType.OTHER);
+		assertThat(files.get(2).getFileType()).isEqualTo(FileType.VIDEO);
 		assertThat(files.get(3).getFileType()).isEqualTo(FileType.PICTURE);
 		assertThat(files.get(4).getFileType()).isEqualTo(FileType.PICTURE);
-		assertThat(files.get(5).getFileType()).isEqualTo(FileType.OTHER);
-		assertThat(files.get(6).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(files.get(5).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(files.get(6).getFileType()).isEqualTo(FileType.OTHER);
+		assertThat(files.get(7).getFileType()).isEqualTo(FileType.PICTURE);
 	}
 
 	@Test
@@ -61,5 +64,6 @@ public class FolderParserTest {
 		folderParser.copyTo(destDir);
 
 		// Assert
+
 	}
 }
