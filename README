@@ -8,6 +8,16 @@ This project has several goals.
 
 == Chapter 1. ==
 ----------------
+|| 0.015 ||
+Quality loss threshold.
+|| 0.014 ||
+Lowers Image quality.
+|| 0.013 ||
+Copy files.
+|| 0.012 ||
+Rename files.
+|| 0.011 ||
+List files.
 || 0.010 ||
 First I wan't to prepare the project.
 || 0.01x ||
