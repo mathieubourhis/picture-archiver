@@ -1,0 +1,14 @@
+= WhatsThis =
+-------------
+This project has several goals.
+
+ * Reorganize a picture directory
+ * Lighten the pictures if necessary (aspectratio)
+ * Archives untouched pictures.
+
+== Chapter 1. ==
+----------------
+|| 0.010 ||
+First I wan't to prepare the project.
+|| 0.01x ||
+Goal : App init.
