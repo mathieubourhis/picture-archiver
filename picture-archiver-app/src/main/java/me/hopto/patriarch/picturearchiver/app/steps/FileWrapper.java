@@ -50,4 +50,25 @@ public class FileWrapper {
 	public String getNewName() {
 		return newName;
 	}
+
+	/**
+	 * @return the ext
+	 */
+	public String getExt() {
+		return ext;
+	}
+
+	/**
+	 * @return the index
+	 */
+	public int getIndex() {
+		return index;
+	}
+
+	/**
+	 * @return the format
+	 */
+	public String getFormat() {
+		return format;
+	}
 }

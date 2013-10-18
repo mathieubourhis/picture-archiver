@@ -26,8 +26,7 @@ public class FolderParserTest {
 		if (logger.isDebugEnabled()) logger.debug("[BEGIN] " + name.getMethodName());
 		folderParser = new FolderParser("src/test/resources/sample/aPictureFolder/");
 		destDir = new File("target/aPictureFolder/");
-		if (destDir.exists()) destDir.delete();
-		destDir.mkdirs();
+		if (!destDir.exists()) destDir.mkdirs();
 	}
 
 	@After
