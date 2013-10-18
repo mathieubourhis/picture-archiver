@@ -1,9 +1,15 @@
-package me.hopto.patriarch.pictureupdater.app.admin;
+package me.hopto.patriarch.picturearchiver.app.admin;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import org.apache.log4j.Logger;
 
+/**
+ * Inject Maven project informations into Java application.
+ * 
+ * @author Oleg Varaksin
+ * @see {@link http://ovaraksin.blogspot.fr/2012/02/inject-maven-project-informations-into.html }
+ */
 public final class VersionProvider {
 
 	private static Logger									logger		= Logger.getLogger(VersionProvider.class);
