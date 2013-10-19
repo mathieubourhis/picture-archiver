@@ -35,6 +35,17 @@ public class FileTree {
 	public static String						totalVideosExtList		= "";
 	public static String						totalOtherExtList			= "";
 
+	// FIXME duhh.. vomitto.
+	@Deprecated
+	public static void resetGlobalStats() {
+		totalPictureSizes = 0;
+		totalOthersSizes = 0;
+		totalVideoSizes = 0;
+		totalPicturesExtList = "";
+		totalVideosExtList = "";
+		totalOtherExtList = "";
+	}
+
 	/**
 	 * @return the rootDir
 	 */
@@ -114,7 +125,7 @@ public class FileTree {
 
 	public void prettyPrint() {
 		String path = getIndent(this) + rootDir.getName();
-		if (logger.isDebugEnabled()) logger.debug(padRight(path, 40) + humanReadableByteCount(pictureSizes, true) + " [" + padRight(videosExtList, 7) + "] " + humanReadableByteCount(videoSizes, true) + " [" + padRight(videosExtList, 7) + "] " + humanReadableByteCount(otherSize, true) + " [" + padRight(otherExtList, 7) + "] ");
+		if (logger.isDebugEnabled()) logger.debug(padRight(path, 40) + humanReadableByteCount(pictureSizes, true) + " [" + padRight(picturesExtList, 7) + "] " + humanReadableByteCount(videoSizes, true) + " [" + padRight(videosExtList, 7) + "] " + humanReadableByteCount(otherSize, true) + " [" + padRight(otherExtList, 7) + "] ");
 		for (FileTree dir : dirs) {
 			dir.prettyPrint();
 		}

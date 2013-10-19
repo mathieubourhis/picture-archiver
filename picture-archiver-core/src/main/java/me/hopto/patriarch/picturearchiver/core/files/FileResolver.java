@@ -20,7 +20,7 @@ public class FileResolver {
 		FileType fileType = file.getFileType();
 		File sourceFile = file.getFile();
 		String newName = sourceFile.getName();
-		if (!(fileType == FileType.OTHER || fileType == FileType.DIRECTORY)) {
+		if (fileType != FileType.OTHER) {
 			String id = String.format(format, index);
 			newName = sourceFile.getParentFile().getName() + "_" + id + "." + file.getExt();
 		}

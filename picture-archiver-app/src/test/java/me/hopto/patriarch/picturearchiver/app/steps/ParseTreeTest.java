@@ -18,18 +18,18 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FolderParserTest {
+public class ParseTreeTest {
 	@Rule
 	public TestName				name		= new TestName();
-	private static Logger	logger	= Logger.getLogger(FolderParserTest.class);
-	private FolderParser	folderParser;
+	private static Logger	logger	= Logger.getLogger(ParseTreeTest.class);
+	private ParseTree	folderParser;
 	private File					destDir;
 	private FileTree			tree;
 
 	@Before
 	public void setup() {
 		if (logger.isDebugEnabled()) logger.debug("[BEGIN] " + name.getMethodName());
-		folderParser = new FolderParser();
+		folderParser = new ParseTree();
 		tree = new FileTree(new File("src/test/resources/sample/aPictureFolder/"));
 		destDir = new File("target/aPictureFolder/");
 		if (destDir.exists()) Files.delete(destDir);
@@ -52,15 +52,14 @@ public class FolderParserTest {
 		assertThat(tree).isNotNull();
 		assertThat(tree.getParent()).isNull();
 		List<FileWrapper> rootDirFiles = tree.getFiles();
-		assertThat(rootDirFiles).hasSize(8);
-		assertThat(rootDirFiles.get(0).getFileType()).isEqualTo(FileType.DIRECTORY);
-		assertThat(rootDirFiles.get(1).getFileType()).isEqualTo(FileType.OTHER);
-		assertThat(rootDirFiles.get(2).getFileType()).isEqualTo(FileType.VIDEO);
+		assertThat(rootDirFiles).hasSize(7);
+		assertThat(rootDirFiles.get(0).getFileType()).isEqualTo(FileType.OTHER);
+		assertThat(rootDirFiles.get(1).getFileType()).isEqualTo(FileType.VIDEO);
+		assertThat(rootDirFiles.get(2).getFileType()).isEqualTo(FileType.PICTURE);
 		assertThat(rootDirFiles.get(3).getFileType()).isEqualTo(FileType.PICTURE);
 		assertThat(rootDirFiles.get(4).getFileType()).isEqualTo(FileType.PICTURE);
-		assertThat(rootDirFiles.get(5).getFileType()).isEqualTo(FileType.PICTURE);
-		assertThat(rootDirFiles.get(6).getFileType()).isEqualTo(FileType.OTHER);
-		assertThat(rootDirFiles.get(7).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(rootDirFiles.get(5).getFileType()).isEqualTo(FileType.OTHER);
+		assertThat(rootDirFiles.get(6).getFileType()).isEqualTo(FileType.PICTURE);
 		assertThat(tree.getDirs()).hasSize(1);
 		FileTree subTree = tree.getDirs().get(0);
 		assertThat(subTree).isNotNull();
@@ -72,12 +71,52 @@ public class FolderParserTest {
 	@Test
 	public void copyFiles() throws IOException {
 		// Setup
-		folderParser.tree(tree);
+		logger.debug("Source");
+		FileTree.resetGlobalStats();
+		new ParseTree().tree(tree);
+		tree.prettyPrint();
 
 		// Test
-		tree.prettyPrint();
-		folderParser.copyTreeTo(tree, destDir);
+		//		logger.debug("Copy");
+		//		new FolderCopy().copyTreeTo(tree, destDir);
+		//		FileTree.resetGlobalStats();
+		//		FileTree destTree = new FileTree(destDir);
+		//		new FolderParser().tree(destTree);
+		//		destTree.prettyPrint();
 
-		// Assert
+		logger.debug("CopyPictures");
+		new CopyPictures().copyTreeTo(tree, destDir, true, true);
+		FileTree.resetGlobalStats();
+		FileTree destTree = new FileTree(destDir);
+		new ParseTree().tree(destTree);
+		destTree.prettyPrint();
+
+		logger.debug("CopyVideos");
+		new CopyVideos().copyTreeTo(tree, destDir, true, true);
+		FileTree.resetGlobalStats();
+		destTree = new FileTree(destDir);
+		new ParseTree().tree(destTree);
+		destTree.prettyPrint();
+
+		logger.debug("CopyPictures");
+		new CopyOthers().copyTreeTo(tree, destDir, true);
+		FileTree.resetGlobalStats();
+		destTree = new FileTree(destDir);
+		new ParseTree().tree(destTree);
+		destTree.prettyPrint();
+
+		logger.debug("LightArchive");
+		new LightArchive().lightArchiveDestTree(destTree);
+		FileTree.resetGlobalStats();
+		destTree = new FileTree(destDir);
+		new ParseTree().tree(destTree);
+		destTree.prettyPrint();
+
+		logger.debug("HeavyArchive");
+		new HeavyArchive().heavyArchiveTreeTo(tree, destDir);
+		FileTree.resetGlobalStats();
+		destTree = new FileTree(destDir);
+		new ParseTree().tree(destTree);
+		destTree.prettyPrint();
 	}
 }
