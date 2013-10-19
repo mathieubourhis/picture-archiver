@@ -3,7 +3,7 @@
  <modelVersion>4.0.0</modelVersion>
  <groupId>me.hopto.patriarch</groupId>
  <artifactId>picture-archiver-parent</artifactId>
- <version>0.015</version>
+ <version>0.016</version>
  <packaging>pom</packaging>
  <name>picture-archiver-parent</name>
  <description>picture-archiver's parent project</description>
@@ -16,6 +16,7 @@
   <global.guava.version>11.0.1</global.guava.version>
   <global.slf4j.version>1.6.4</global.slf4j.version>
   <global.log4j.version>1.2.16</global.log4j.version>
+  <global.truezip.version>7.7.4</global.truezip.version>
   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
  </properties>
 
@@ -115,6 +116,24 @@
     <artifactId>junit</artifactId>
     <version>${global.junit.version}</version>
     <scope>test</scope>
+   </dependency>
+   <dependency>
+    <groupId>de.schlichtherle.truezip</groupId>
+    <artifactId>truezip-path</artifactId>
+    <version>${global.truezip.version}</version>
+    <scope>compile</scope>
+   </dependency>
+   <dependency>
+    <groupId>de.schlichtherle.truezip</groupId>
+    <artifactId>truezip-file</artifactId>
+    <version>${global.truezip.version}</version>
+    <scope>compile</scope>
+   </dependency>
+   <dependency>
+    <groupId>de.schlichtherle.truezip</groupId>
+    <artifactId>truezip-driver-zip</artifactId>
+    <version>${global.truezip.version}</version>
+    <scope>compile</scope>
    </dependency>
   </dependencies>
  </dependencyManagement>

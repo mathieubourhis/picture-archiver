@@ -4,8 +4,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,6 +18,13 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.FileImageOutputStream;
 import org.apache.log4j.Logger;
+import de.schlichtherle.truezip.file.TArchiveDetector;
+import de.schlichtherle.truezip.file.TConfig;
+import de.schlichtherle.truezip.file.TFile;
+import de.schlichtherle.truezip.file.TVFS;
+import de.schlichtherle.truezip.fs.FsOutputOption;
+import de.schlichtherle.truezip.fs.archive.zip.CheckedZipDriver;
+import de.schlichtherle.truezip.socket.sl.IOPoolLocator;
 
 public class FolderParser {
 	private static Logger						logger	= Logger.getLogger(FolderParser.class);
@@ -25,6 +34,14 @@ public class FolderParser {
 	public FolderParser(String rootPath) {
 		this.rootPath = rootPath;
 		files = new ArrayList<FileWrapper>();
+		TConfig config = TConfig.get();
+		config.setOutputPreferences(config.getOutputPreferences().set(FsOutputOption.GROW));
+		new TArchiveDetector(TArchiveDetector.ALL, new Object[][] { { "zip", new CheckedZipDriver(IOPoolLocator.SINGLETON) { // check CRC-32
+			@Override
+			public Charset getCharset() {
+				return Charset.defaultCharset();
+			}
+		} } });
 	}
 
 	/** @return the rootPath */
@@ -58,9 +75,11 @@ public class FolderParser {
 
 	public void copyTo(File destDir) throws IOException {
 		if (!destDir.isDirectory()) throw new RuntimeException("not a dir");
+		initArchiveDirs(destDir);
 		for (FileWrapper fileWrapper : files) {
 			String separator = FileSystems.getDefault().getSeparator();
 			String destPath = destDir.getPath() + (destDir.getPath().endsWith(separator) ? "" : separator);
+			Path targetPath = null;
 			switch (fileWrapper.getFileType()) {
 			case DIRECTORY:
 				processNestedDir(fileWrapper, separator, destPath);
@@ -69,15 +88,21 @@ public class FolderParser {
 				copyFileToMiscDir(fileWrapper, destPath);
 				break;
 			case PICTURE:
-				compressAndRenamePicture(fileWrapper, destPath);
+				targetPath = compressAndRenamePicture(fileWrapper, destPath);
 				break;
 			case VIDEO:
-				copyFile(fileWrapper, destPath);
+				targetPath = copyFile(fileWrapper, destPath);
 				break;
 			default:
 				break;
 			}
+			if (targetPath != null) {
+				File lightFile = targetPath.toFile();
+				new TFile(lightFile).cp_rp(new TFile(Paths.get(destDir.getPath(), "__archives", "light.zip", lightFile.getName()).toFile()));
+				new TFile(fileWrapper.getFile()).cp_rp(new TFile(Paths.get(destDir.getPath(), "__archives", "unedited.zip", fileWrapper.getFile().getName()).toFile()));
+			}
 		}
+		TVFS.umount();
 	}
 
 	private void processNestedDir(FileWrapper fileWrapper, String separator, String destPath) throws IOException {
@@ -89,8 +114,8 @@ public class FolderParser {
 		folderParser.copyTo(nestedDestDir);
 	}
 
-	private void copyFile(FileWrapper fileWrapper, String destPath) throws IOException {
-		Files.copy(fileWrapper.getFile().toPath(), Paths.get(destPath, fileWrapper.getNewName()));
+	private Path copyFile(FileWrapper fileWrapper, String destPath) throws IOException {
+		return Files.copy(fileWrapper.getFile().toPath(), Paths.get(destPath, fileWrapper.getNewName()));
 	}
 
 	private void copyFileToMiscDir(FileWrapper fileWrapper, String destPath) throws IOException {
@@ -99,19 +124,26 @@ public class FolderParser {
 		Files.copy(fileWrapper.getFile().toPath(), Paths.get(destPath, "__misc", fileWrapper.getNewName()));
 	}
 
-	private void compressAndRenamePicture(FileWrapper fileWrapper, String destPath) throws FileNotFoundException, IOException {
+	private void initArchiveDirs(File destDir) {
+		File file = Paths.get(destDir.getPath(), "__archives").toFile();
+		if (!file.exists()) file.mkdirs();
+	}
+
+	private Path compressAndRenamePicture(FileWrapper fileWrapper, String destPath) throws FileNotFoundException, IOException {
 		Iterator<?> iter = ImageIO.getImageWritersByFormatName(fileWrapper.getExt());
 		ImageWriter writer = (ImageWriter) iter.next();
 		ImageWriteParam iwp = writer.getDefaultWriteParam();
 		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 
 		iwp.setCompressionQuality(fileWrapper.getQuality());
-		File outputFile = new File(destPath + fileWrapper.getNewName());
+		Path path = Paths.get(destPath, fileWrapper.getNewName());
+		File outputFile = path.toFile();
 		FileImageOutputStream output = new FileImageOutputStream(outputFile);
 		writer.setOutput(output);
 		BufferedImage img = ImageIO.read(fileWrapper.getFile());
 		IIOImage image = new IIOImage(img, null, null);
 		writer.write(null, image, iwp);
 		writer.dispose();
+		return path;
 	}
 }

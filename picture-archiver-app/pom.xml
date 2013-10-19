@@ -10,7 +10,7 @@
  <parent>
   <groupId>me.hopto.patriarch</groupId>
   <artifactId>picture-archiver-parent</artifactId>
-  <version>0.015</version>
+  <version>0.016</version>
   <relativePath>..</relativePath>
  </parent>
 
@@ -60,4 +60,22 @@
    </plugin>
   </plugins>
  </build>
+ 
+ <dependencies>
+  <!-- ARCHIVE -->
+ <dependency>
+    <groupId>de.schlichtherle.truezip</groupId>
+    <artifactId>truezip-path</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>de.schlichtherle.truezip</groupId>
+    <artifactId>truezip-file</artifactId>
+  </dependency>
+  
+  <dependency>
+    <groupId>de.schlichtherle.truezip</groupId>
+    <artifactId>truezip-driver-zip</artifactId>
+  </dependency>
+ </dependencies>
+ 
 </project>
