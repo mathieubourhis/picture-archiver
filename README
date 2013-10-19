@@ -2,13 +2,27 @@
 -------------
 This project has several goals.
 
- * Reorganize a picture directory
- * Lighten the pictures if necessary (aspectratio)
- * Archives untouched pictures.
-
+ * Reorganize a picture directory (renaming, filtering).
+ * Lighten the pictures and videos (compress and change format).
+ * Archives pictures (unedited for safekeeping, ligthened for sharing).
  
+= WhatsComingNext =
+-------------------
+ * Dagger and step driven developpement
+ * find and use a better way to compress pictures
+ * find a way to compress video
+ * host a personal maven repo for exotic libs ? 
+ * Timestamps for log4j.
+
+= GettingStarted =
+------------------
+Find what you need here : 
+https://code.google.com/p/picture-archiver/wiki/GettingStarted
+
 == Chapter 2. ==
 ----------------
+|| 0.021 ||
+I need to split the statistics module from the tree component (and obliterate those static members..)
 || 0.020 ||
 First I need to reorg a bit reponsabilities in my classes.
 || 0.02x ||

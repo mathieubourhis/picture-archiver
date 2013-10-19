@@ -10,7 +10,7 @@
  <parent>
   <groupId>me.hopto.patriarch</groupId>
   <artifactId>picture-archiver-parent</artifactId>
-  <version>0.020</version>
+  <version>0.021</version>
   <relativePath>..</relativePath>
  </parent>
 
