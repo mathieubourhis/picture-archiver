@@ -3,7 +3,7 @@
  <modelVersion>4.0.0</modelVersion>
  <groupId>me.hopto.patriarch</groupId>
  <artifactId>picture-archiver-parent</artifactId>
- <version>0.017</version>
+ <version>0.020</version>
  <packaging>pom</packaging>
  <name>picture-archiver-parent</name>
  <description>picture-archiver's parent project</description>

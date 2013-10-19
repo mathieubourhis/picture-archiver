@@ -6,6 +6,14 @@ This project has several goals.
  * Lighten the pictures if necessary (aspectratio)
  * Archives untouched pictures.
 
+ 
+== Chapter 2. ==
+----------------
+|| 0.020 ||
+First I need to reorg a bit reponsabilities in my classes.
+|| 0.02x ||
+Goal : Clean up the code.
+
 == Chapter 1. ==
 ----------------
 || 0.017 ||
