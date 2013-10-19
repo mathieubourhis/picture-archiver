@@ -9,14 +9,13 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.FileImageOutputStream;
+import me.hopto.patriarch.picturearchiver.core.files.FileTree;
 import me.hopto.patriarch.picturearchiver.core.files.FileType;
 import me.hopto.patriarch.picturearchiver.core.files.FileWrapper;
 import org.apache.log4j.Logger;
@@ -29,13 +28,9 @@ import de.schlichtherle.truezip.fs.archive.zip.CheckedZipDriver;
 import de.schlichtherle.truezip.socket.sl.IOPoolLocator;
 
 public class FolderParser {
-	private static Logger						logger	= Logger.getLogger(FolderParser.class);
-	private final String						rootPath;
-	private final List<FileWrapper>	files;
+	private static Logger	logger	= Logger.getLogger(FolderParser.class);
 
-	public FolderParser(String rootPath) {
-		this.rootPath = rootPath;
-		files = new ArrayList<FileWrapper>();
+	public FolderParser() {
 		TConfig config = TConfig.get();
 		config.setOutputPreferences(config.getOutputPreferences().set(FsOutputOption.GROW));
 		new TArchiveDetector(TArchiveDetector.ALL, new Object[][] { { "zip", new CheckedZipDriver(IOPoolLocator.SINGLETON) {
@@ -46,53 +41,11 @@ public class FolderParser {
 		} } });
 	}
 
-	/** @return the rootPath */
-	public String getRootPath() {
-		return rootPath;
-	}
-
-	public List<FileWrapper> parseDir() throws IOException {
-		files.clear();
-		File rootDir = new File(rootPath);
+	public FileTree tree(FileTree rootTree) throws IOException {
+		File rootDir = rootTree.getRootDir();
 		if (rootDir.exists() && rootDir.isDirectory()) {
 			File[] listFiles = rootDir.listFiles();
-			int digits = 2;
-			int index = 0;
-			String format = String.format("%%0%dd", digits);
-			for (File file : listFiles) {
-				if (!file.isDirectory()) {
-					if (logger.isDebugEnabled()) logger.debug(file.getPath());
-					String probeContentType = Files.probeContentType(file.toPath());
-					String type = probeContentType.split("/")[0];
-					if (type.equals("image")) files.add(new FileWrapper(FileType.PICTURE, file, index++, format));
-					else if (type.equals("video")) files.add(new FileWrapper(FileType.VIDEO, file, index++, format));
-					else files.add(new FileWrapper(FileType.OTHER, file));
-				} else {
-					files.add(new FileWrapper(FileType.DIRECTORY, file));
-				}
-			}
-		}
-		return files;
-	}
 
-	private long					pictureSizes			= 0;
-	private long					videoSizes				= 0;
-	private long					otherSize					= 0;
-	public static long		totalPictureSizes	= 0;
-	public static long		totalOthersSizes	= 0;
-	public static long		totalVideoSizes		= 0;
-	public static String	picturesExtList		= "";
-	public static String	videosExtList			= "";
-	public static String	otherExtList			= "";
-
-	public List<FileWrapper> tree(String indent) throws IOException {
-		files.clear();
-		File rootDir = new File(rootPath);
-		if (rootDir.exists() && rootDir.isDirectory()) {
-			File[] listFiles = rootDir.listFiles();
-			int digits = 2;
-			int index = 0;
-			String format = String.format("%%0%dd", digits);
 			for (File file : listFiles) {
 				// delete file.getName().equals("Thumbs.db")
 				if (!file.isDirectory()) {
@@ -100,33 +53,21 @@ public class FolderParser {
 					String type = "other"; // for exotic file ext
 					if (probeContentType != null) type = probeContentType.split("/")[0];
 					if (type.equals("image")) {
-						FileWrapper e = new FileWrapper(FileType.PICTURE, file, index++, format);
-						files.add(e);
-						if (!picturesExtList.contains(e.getExt())) picturesExtList = picturesExtList + (picturesExtList.equals("") ? "" : ", ") + e.getExt();
-						pictureSizes += e.getSize();
+						rootTree.add(new FileWrapper(FileType.PICTURE, file));
 					} else if (type.equals("video")) {
-						FileWrapper e = new FileWrapper(FileType.VIDEO, file, index++, format);
-						files.add(e);
-						if (!videosExtList.contains(e.getExt())) videosExtList = videosExtList + (videosExtList.equals("") ? "" : ", ") + e.getExt();
-						videoSizes += e.getSize();
+						rootTree.add(new FileWrapper(FileType.VIDEO, file));
 					} else {
-						FileWrapper e = new FileWrapper(FileType.OTHER, file);
-						otherSize += e.getSize();
-						if (!otherExtList.contains(e.getExt())) otherExtList = otherExtList + (otherExtList.equals("") ? "" : ", ") + e.getExt();
-						files.add(e);
+						rootTree.add(new FileWrapper(FileType.OTHER, file));
 					}
 				} else {
-					files.add(new FileWrapper(FileType.DIRECTORY, file));
-					//					new FolderParser(file.getPath()).tree("--" + indent);
-					new FolderParser(file.getPath()).tree(indent + rootDir.getName() + "/");
+					rootTree.add(new FileWrapper(FileType.DIRECTORY, file));
+					FileTree subDir = rootTree.addDir(file);
+					tree(subDir);
 				}
 			}
 		}
-		totalPictureSizes += pictureSizes;
-		totalVideoSizes += videoSizes;
-		totalOthersSizes += otherSize;
-		if (logger.isDebugEnabled()) logger.debug(indent + rootDir.getName() + "/     ; Pictures : " + humanReadableByteCount(pictureSizes, true) + " ; Videos : " + humanReadableByteCount(videoSizes, true) + " ; Others : " + humanReadableByteCount(otherSize, true));
-		return files;
+
+		return rootTree;
 	}
 
 	public static String humanReadableByteCount(long bytes, boolean si) {
@@ -137,17 +78,18 @@ public class FolderParser {
 		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 
-	public void copyTo(File destDir) throws IOException {
-		if (!destDir.isDirectory()) throw new RuntimeException("not a dir");
+	public void copyTreeTo(FileTree tree, File destDir) throws IOException {
+		//		if (!destDir.isDirectory()) throw new RuntimeException("not a dir");
+		destDir.mkdirs();
 		initArchiveDirs(destDir);
-		for (FileWrapper fileWrapper : files) {
+		for (FileWrapper fileWrapper : tree.getFiles()) {
 			String separator = FileSystems.getDefault().getSeparator();
 			String destPath = destDir.getPath() + (destDir.getPath().endsWith(separator) ? "" : separator);
 			Path targetPath = null;
 			switch (fileWrapper.getFileType()) {
-			case DIRECTORY:
-				processNestedDir(fileWrapper, separator, destPath);
-				break;
+			//			case DIRECTORY:
+			//				processNestedDir(fileWrapper, separator, destPath);
+			//				break;
 			case OTHER:
 				copyFileToMiscDir(fileWrapper, destPath);
 				break;
@@ -166,17 +108,21 @@ public class FolderParser {
 				new TFile(fileWrapper.getFile()).cp_rp(new TFile(Paths.get(destDir.getPath(), "__archives", "unedited.zip", fileWrapper.getFile().getName()).toFile()));
 			}
 		}
+		for (FileTree subTree : tree.getDirs()) {
+			File nestedDir = Paths.get(destDir.getPath(), subTree.getRootDir().getName()).toFile();
+			copyTreeTo(subTree, nestedDir);
+		}
 		TVFS.umount();
 	}
 
-	private void processNestedDir(FileWrapper fileWrapper, String separator, String destPath) throws IOException {
-		FolderParser folderParser = new FolderParser(fileWrapper.getFile().getPath());
-		folderParser.parseDir();
-		String nestedDestPath = destPath + fileWrapper.getNewName() + separator;
-		File nestedDestDir = new File(nestedDestPath);
-		if (!nestedDestDir.exists()) nestedDestDir.mkdirs();
-		folderParser.copyTo(nestedDestDir);
-	}
+	//	private void processNestedDir(FileWrapper fileWrapper, String separator, String destPath) throws IOException {
+	//		FolderParser folderParser = new FolderParser(fileWrapper.getFile().getPath());
+	//		folderParser.parseDir();
+	//		String nestedDestPath = destPath + fileWrapper.getNewName() + separator;
+	//		File nestedDestDir = new File(nestedDestPath);
+	//		if (!nestedDestDir.exists()) nestedDestDir.mkdirs();
+	//		folderParser.copyTo(nestedDestDir);
+	//	}
 
 	private Path copyFile(FileWrapper fileWrapper, String destPath) throws IOException {
 		return Files.copy(fileWrapper.getFile().toPath(), Paths.get(destPath, fileWrapper.getNewName()));

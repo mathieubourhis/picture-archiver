@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import me.hopto.patriarch.picturearchiver.core.files.FileTree;
 import me.hopto.patriarch.picturearchiver.core.files.FileType;
 import me.hopto.patriarch.picturearchiver.core.files.FileWrapper;
 import org.apache.log4j.Logger;
@@ -23,11 +24,13 @@ public class FolderParserTest {
 	private static Logger	logger	= Logger.getLogger(FolderParserTest.class);
 	private FolderParser	folderParser;
 	private File					destDir;
+	private FileTree			tree;
 
 	@Before
 	public void setup() {
 		if (logger.isDebugEnabled()) logger.debug("[BEGIN] " + name.getMethodName());
-		folderParser = new FolderParser("src/test/resources/sample/aPictureFolder/");
+		folderParser = new FolderParser();
+		tree = new FileTree(new File("src/test/resources/sample/aPictureFolder/"));
 		destDir = new File("target/aPictureFolder/");
 		if (destDir.exists()) Files.delete(destDir);
 		destDir.mkdirs();
@@ -38,42 +41,43 @@ public class FolderParserTest {
 		if (logger.isDebugEnabled()) logger.debug("[ END ] " + name.getMethodName());
 	}
 
-	//	@Test
+	@Test
 	public void checkStuff() throws IOException {
 		// Setup
 
 		// Test
-		List<FileWrapper> files = folderParser.parseDir();
+		folderParser.tree(tree);
 
 		// Assert
-		assertThat(files).isNotNull().hasSize(8);
-		assertThat(files.get(0).getFileType()).isEqualTo(FileType.DIRECTORY);
-		assertThat(files.get(1).getFileType()).isEqualTo(FileType.OTHER);
-		assertThat(files.get(2).getFileType()).isEqualTo(FileType.VIDEO);
-		assertThat(files.get(3).getFileType()).isEqualTo(FileType.PICTURE);
-		assertThat(files.get(4).getFileType()).isEqualTo(FileType.PICTURE);
-		assertThat(files.get(5).getFileType()).isEqualTo(FileType.PICTURE);
-		assertThat(files.get(6).getFileType()).isEqualTo(FileType.OTHER);
-		assertThat(files.get(7).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(tree).isNotNull();
+		assertThat(tree.getParent()).isNull();
+		List<FileWrapper> rootDirFiles = tree.getFiles();
+		assertThat(rootDirFiles).hasSize(8);
+		assertThat(rootDirFiles.get(0).getFileType()).isEqualTo(FileType.DIRECTORY);
+		assertThat(rootDirFiles.get(1).getFileType()).isEqualTo(FileType.OTHER);
+		assertThat(rootDirFiles.get(2).getFileType()).isEqualTo(FileType.VIDEO);
+		assertThat(rootDirFiles.get(3).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(rootDirFiles.get(4).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(rootDirFiles.get(5).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(rootDirFiles.get(6).getFileType()).isEqualTo(FileType.OTHER);
+		assertThat(rootDirFiles.get(7).getFileType()).isEqualTo(FileType.PICTURE);
+		assertThat(tree.getDirs()).hasSize(1);
+		FileTree subTree = tree.getDirs().get(0);
+		assertThat(subTree).isNotNull();
+		assertThat(subTree.getParent()).isNotNull().isEqualTo(tree);
+		assertThat(subTree.getFiles()).hasSize(1);
+		assertThat(subTree.getFiles().get(0).getFileType()).isEqualTo(FileType.PICTURE);
 	}
 
 	@Test
 	public void copyFiles() throws IOException {
 		// Setup
-		//		folderParser.parseDir();
+		folderParser.tree(tree);
 
 		// Test
-		//		folderParser.copyTo(destDir);
-		folderParser = new FolderParser("E:\\Images\\Photos\\");
-		folderParser.tree("/");
-		if (logger.isDebugEnabled()) logger.debug("[TOTAL] pictures : " + FolderParser.humanReadableByteCount(FolderParser.totalPictureSizes, true));
-		if (logger.isDebugEnabled()) logger.debug("[TOTAL] pictures (EXT) : " + FolderParser.picturesExtList);
-		if (logger.isDebugEnabled()) logger.debug("[TOTAL] videos : " + FolderParser.humanReadableByteCount(FolderParser.totalVideoSizes, true));
-		if (logger.isDebugEnabled()) logger.debug("[TOTAL] videos (EXT) : " + FolderParser.videosExtList);
-		if (logger.isDebugEnabled()) logger.debug("[TOTAL] others : " + FolderParser.humanReadableByteCount(FolderParser.totalOthersSizes, true));
-		if (logger.isDebugEnabled()) logger.debug("[TOTAL] others (EXT) : " + FolderParser.otherExtList);
+		tree.prettyPrint();
+		folderParser.copyTreeTo(tree, destDir);
 
 		// Assert
-
 	}
 }
