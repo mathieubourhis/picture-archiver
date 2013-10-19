@@ -36,7 +36,7 @@ public class FolderParserTest {
 		if (logger.isDebugEnabled()) logger.debug("[ END ] " + name.getMethodName());
 	}
 
-	@Test
+	//	@Test
 	public void checkStuff() throws IOException {
 		// Setup
 
@@ -58,10 +58,18 @@ public class FolderParserTest {
 	@Test
 	public void copyFiles() throws IOException {
 		// Setup
-		folderParser.parseDir();
+		//		folderParser.parseDir();
 
 		// Test
-		folderParser.copyTo(destDir);
+		//		folderParser.copyTo(destDir);
+		folderParser = new FolderParser("E:\\Images\\Photos\\");
+		folderParser.tree("/");
+		if (logger.isDebugEnabled()) logger.debug("[TOTAL] pictures : " + FolderParser.humanReadableByteCount(FolderParser.totalPictureSizes, true));
+		if (logger.isDebugEnabled()) logger.debug("[TOTAL] pictures (EXT) : " + FolderParser.picturesExtList);
+		if (logger.isDebugEnabled()) logger.debug("[TOTAL] videos : " + FolderParser.humanReadableByteCount(FolderParser.totalVideoSizes, true));
+		if (logger.isDebugEnabled()) logger.debug("[TOTAL] videos (EXT) : " + FolderParser.videosExtList);
+		if (logger.isDebugEnabled()) logger.debug("[TOTAL] others : " + FolderParser.humanReadableByteCount(FolderParser.totalOthersSizes, true));
+		if (logger.isDebugEnabled()) logger.debug("[TOTAL] others (EXT) : " + FolderParser.otherExtList);
 
 		// Assert
 

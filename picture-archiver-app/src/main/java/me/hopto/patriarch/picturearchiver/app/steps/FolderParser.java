@@ -36,7 +36,7 @@ public class FolderParser {
 		files = new ArrayList<FileWrapper>();
 		TConfig config = TConfig.get();
 		config.setOutputPreferences(config.getOutputPreferences().set(FsOutputOption.GROW));
-		new TArchiveDetector(TArchiveDetector.ALL, new Object[][] { { "zip", new CheckedZipDriver(IOPoolLocator.SINGLETON) { // check CRC-32
+		new TArchiveDetector(TArchiveDetector.ALL, new Object[][] { { "zip", new CheckedZipDriver(IOPoolLocator.SINGLETON) {
 			@Override
 			public Charset getCharset() {
 				return Charset.defaultCharset();
@@ -71,6 +71,68 @@ public class FolderParser {
 			}
 		}
 		return files;
+	}
+
+	private long					pictureSizes			= 0;
+	private long					videoSizes				= 0;
+	private long					otherSize					= 0;
+	public static long		totalPictureSizes	= 0;
+	public static long		totalOthersSizes	= 0;
+	public static long		totalVideoSizes		= 0;
+	public static String	picturesExtList		= "";
+	public static String	videosExtList			= "";
+	public static String	otherExtList			= "";
+
+	public List<FileWrapper> tree(String indent) throws IOException {
+		files.clear();
+		File rootDir = new File(rootPath);
+		if (rootDir.exists() && rootDir.isDirectory()) {
+			File[] listFiles = rootDir.listFiles();
+			int digits = 2;
+			int index = 0;
+			String format = String.format("%%0%dd", digits);
+			for (File file : listFiles) {
+				// delete file.getName().equals("Thumbs.db")
+				if (!file.isDirectory()) {
+					String probeContentType = Files.probeContentType(file.toPath());
+					String type = "other"; // for exotic file ext
+					if (probeContentType != null) type = probeContentType.split("/")[0];
+					if (type.equals("image")) {
+						FileWrapper e = new FileWrapper(FileType.PICTURE, file, index++, format);
+						files.add(e);
+						if (!picturesExtList.contains(e.getExt())) picturesExtList = picturesExtList + (picturesExtList.equals("") ? "" : ", ") + e.getExt();
+						pictureSizes += e.getSize();
+					} else if (type.equals("video")) {
+						FileWrapper e = new FileWrapper(FileType.VIDEO, file, index++, format);
+						files.add(e);
+						if (!videosExtList.contains(e.getExt())) videosExtList = videosExtList + (videosExtList.equals("") ? "" : ", ") + e.getExt();
+						videoSizes += e.getSize();
+					} else {
+						FileWrapper e = new FileWrapper(FileType.OTHER, file);
+						otherSize += e.getSize();
+						if (!otherExtList.contains(e.getExt())) otherExtList = otherExtList + (otherExtList.equals("") ? "" : ", ") + e.getExt();
+						files.add(e);
+					}
+				} else {
+					files.add(new FileWrapper(FileType.DIRECTORY, file));
+					//					new FolderParser(file.getPath()).tree("--" + indent);
+					new FolderParser(file.getPath()).tree(indent + rootDir.getName() + "/");
+				}
+			}
+		}
+		totalPictureSizes += pictureSizes;
+		totalVideoSizes += videoSizes;
+		totalOthersSizes += otherSize;
+		if (logger.isDebugEnabled()) logger.debug(indent + rootDir.getName() + "/     ; Pictures : " + humanReadableByteCount(pictureSizes, true) + " ; Videos : " + humanReadableByteCount(videoSizes, true) + " ; Others : " + humanReadableByteCount(otherSize, true));
+		return files;
+	}
+
+	public static String humanReadableByteCount(long bytes, boolean si) {
+		int unit = si ? 1000 : 1024;
+		if (bytes < unit) return bytes + " B";
+		int exp = (int) (Math.log(bytes) / Math.log(unit));
+		String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
+		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 
 	public void copyTo(File destDir) throws IOException {
