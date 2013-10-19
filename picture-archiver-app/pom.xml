@@ -60,22 +60,28 @@
    </plugin>
   </plugins>
  </build>
- 
+
  <dependencies>
+  <!-- The project -->
+  <dependency>
+   <groupId>me.hopto.patriarch</groupId>
+   <artifactId>picture-archiver-core</artifactId>
+   <version>${project.parent.version}</version>
+  </dependency>
+
   <!-- ARCHIVE -->
- <dependency>
-    <groupId>de.schlichtherle.truezip</groupId>
-    <artifactId>truezip-path</artifactId>
+  <dependency>
+   <groupId>de.schlichtherle.truezip</groupId>
+   <artifactId>truezip-path</artifactId>
   </dependency>
   <dependency>
-    <groupId>de.schlichtherle.truezip</groupId>
-    <artifactId>truezip-file</artifactId>
+   <groupId>de.schlichtherle.truezip</groupId>
+   <artifactId>truezip-file</artifactId>
   </dependency>
-  
+
   <dependency>
-    <groupId>de.schlichtherle.truezip</groupId>
-    <artifactId>truezip-driver-zip</artifactId>
+   <groupId>de.schlichtherle.truezip</groupId>
+   <artifactId>truezip-driver-zip</artifactId>
   </dependency>
  </dependencies>
- 
 </project>

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import me.hopto.patriarch.picturearchiver.core.files.FileType;
+import me.hopto.patriarch.picturearchiver.core.files.FileWrapper;
 import org.apache.log4j.Logger;
 import org.assertj.core.util.Files;
 import org.junit.After;

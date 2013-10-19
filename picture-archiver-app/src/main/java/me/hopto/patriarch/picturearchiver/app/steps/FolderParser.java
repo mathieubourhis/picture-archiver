@@ -17,6 +17,8 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.FileImageOutputStream;
+import me.hopto.patriarch.picturearchiver.core.files.FileType;
+import me.hopto.patriarch.picturearchiver.core.files.FileWrapper;
 import org.apache.log4j.Logger;
 import de.schlichtherle.truezip.file.TArchiveDetector;
 import de.schlichtherle.truezip.file.TConfig;
