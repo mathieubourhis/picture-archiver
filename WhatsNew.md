@@ -1,0 +1,33 @@
+# WhatsComingNext #
+
+---
+
+  * Dagger and step driven developpement
+  * find and use a better way to compress pictures
+  * find a way to compress video
+  * host a personal maven repo for exotic libs ?
+  * Timestamps for log4j.
+
+## Chapter 2. ##
+
+---
+
+| 0.021 | I need to split the statistics module from the tree component (and obliterate those static members..) |
+|:------|:------------------------------------------------------------------------------------------------------|
+| 0.020 | First I need to reorg a bit reponsabilities in my classes.                                            |
+| 0.02x | **Goal** : Clean up the code.                                                                         |
+
+## Chapter 1. ##
+
+---
+
+| 0.017 | I Need to be estimate the file types / size of my pictures / videos and others in personal dirs. |
+|:------|:-------------------------------------------------------------------------------------------------|
+| 0.016 | Archive with TrueZip.                                                                            |
+| 0.015 | Quality loss threshold.                                                                          |
+| 0.014 | Lowers Image quality.                                                                            |
+| 0.013 | Copy files.                                                                                      |
+| 0.012 | Rename files.                                                                                    |
+| 0.011 | List files.                                                                                      |
+| 0.010 | First I wan't to prepare the project.                                                            |
+| 0.01x | **Goal** : App init.                                                                             |
